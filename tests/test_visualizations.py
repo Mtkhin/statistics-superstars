@@ -139,14 +139,10 @@ def test_dashboard_layout():
 
     layout = dashboard_layout()
 
-    assert layout["page_title"] == (
-        "Iris Statistics Dashboard"
-    )
-
+    assert layout["page_title"] == "Iris Statistical Study"
     assert layout["layout"] == "wide"
-
+    assert layout["initial_sidebar_state"] == "expanded"
     assert "page_icon" in layout
-
 
 def test_invalid_column(sample_data):
     """Invalid columns should raise ValueError."""

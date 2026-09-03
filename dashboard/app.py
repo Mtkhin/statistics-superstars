@@ -32,7 +32,7 @@ from src.visualizations import (
 
 
 # -------------------------------------------------
-# Page configuration
+# Page setup
 # -------------------------------------------------
 
 st.set_page_config(
@@ -41,7 +41,7 @@ st.set_page_config(
 
 
 # -------------------------------------------------
-# Load dataset
+# Data
 # -------------------------------------------------
 
 @st.cache_data
@@ -70,19 +70,222 @@ numeric_columns = [
 
 
 # -------------------------------------------------
+# Helpers
+# -------------------------------------------------
+
+def pretty_label(value: str) -> str:
+    return value.replace("_", " ").title()
+
+
+def format_p_value(value: float) -> str:
+
+    if value < 0.001:
+        return f"{value:.2e}"
+
+    return f"{value:.4f}"
+
+
+# -------------------------------------------------
+# Styling
+# -------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+
+    /* PAGE */
+
+    .block-container {
+    max-width: 1280px;
+    padding-top: 4.2rem;
+    padding-bottom: 4rem;
+}
+
+    /* REMOVE EXCESS VISUAL NOISE */
+
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+
+    /* TYPOGRAPHY */
+
+    h1, h2, h3 {
+        letter-spacing: -0.025em;
+    }
+
+    h2 {
+        margin-top: 0.4rem;
+    }
+
+    /* EDITORIAL HEADER */
+
+    .project-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: #C4A66A;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+    .project-title {
+        color: #EEEAE2;
+        font-size: 3.15rem;
+        font-weight: 600;
+        letter-spacing: -0.045em;
+        line-height: 1.04;
+        margin-bottom: 0.8rem;
+    }
+
+    .project-subtitle {
+        max-width: 760px;
+        color: #A4AAA3;
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 1.7rem;
+    }
+
+    .header-rule {
+        border-top: 1px solid #30352F;
+        margin-bottom: 1.5rem;
+    }
+
+    /* SECTION COPY */
+
+    .section-label {
+        color: #C4A66A;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .section-copy {
+        color: #A4AAA3;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        margin-top: -0.35rem;
+        margin-bottom: 1rem;
+    }
+
+    /* INSIGHT */
+
+    .insight {
+        border-left: 2px solid #C4A66A;
+        padding: 0.25rem 0 0.25rem 1rem;
+        margin: 1.3rem 0 1.5rem 0;
+    }
+
+    .insight-label {
+        color: #8B918A;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.3rem;
+    }
+
+    .insight-text {
+        color: #EEEAE2;
+        font-size: 1rem;
+        line-height: 1.55;
+    }
+
+    /* METRICS */
+
+    div[data-testid="stMetric"] {
+        background: #171B18;
+        border: 1px solid #30352F;
+        border-radius: 4px;
+        padding: 1rem 1rem 0.9rem 1rem;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #929991;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #EEEAE2;
+        font-weight: 500;
+    }
+
+    /* TABS */
+
+    div[data-baseweb="tab-list"] {
+        gap: 1.6rem;
+        border-bottom: 1px solid #30352F;
+    }
+
+    button[data-baseweb="tab"] {
+        background: transparent;
+        padding-left: 0;
+        padding-right: 0;
+        color: #929991;
+        font-weight: 500;
+    }
+
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #EEEAE2;
+    }
+
+    div[data-baseweb="tab-highlight"] {
+        background-color: #C4A66A;
+    }
+
+    /* SIDEBAR */
+
+    section[data-testid="stSidebar"] {
+        border-right: 1px solid #30352F;
+    }
+
+    /* TABLES */
+
+    div[data-testid="stDataFrame"] {
+        border: 1px solid #30352F;
+    }
+
+    /* DIVIDERS */
+
+    hr {
+        border-color: #30352F;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# -------------------------------------------------
 # Header
 # -------------------------------------------------
 
-st.title(
-    "🌸 Iris Statistics Dashboard"
-)
+st.markdown(
+    """
+    <div class="project-kicker">
+        Statistics Superstars / Iris Study
+    </div>
 
-st.write(
-    """
-    Interactive statistical exploration of the Iris flower
-    dataset. Explore distributions, species differences,
-    relationships, confidence intervals, and hypothesis tests.
-    """
+    <div class="project-title">
+        Patterns in the Iris Dataset
+    </div>
+
+    <div class="project-subtitle">
+        An exploratory statistical study of how sepal and petal
+        measurements vary across Setosa, Versicolor, and Virginica.
+        The analysis combines descriptive statistics, distributions,
+        confidence intervals, correlation, and hypothesis testing.
+    </div>
+
+    <div class="header-rule"></div>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -90,36 +293,46 @@ st.write(
 # Sidebar
 # -------------------------------------------------
 
-st.sidebar.header(
-    "Dashboard Controls"
+st.sidebar.markdown(
+    "## Explore"
 )
 
 selected_species = st.sidebar.multiselect(
-    "Select Iris species",
+    "Species",
     options=sorted(
         df["species"].unique()
     ),
     default=sorted(
         df["species"].unique()
-    )
+    ),
+    format_func=lambda value: value.title()
 )
 
 selected_variable = st.sidebar.selectbox(
-    "Select measurement",
-    numeric_columns,
-    index=2
+    "Measurement",
+    options=numeric_columns,
+    index=2,
+    format_func=pretty_label
 )
 
 scatter_x = st.sidebar.selectbox(
-    "Scatter plot X-axis",
-    numeric_columns,
-    index=2
+    "Horizontal axis",
+    options=numeric_columns,
+    index=2,
+    format_func=pretty_label
 )
 
 scatter_y = st.sidebar.selectbox(
-    "Scatter plot Y-axis",
-    numeric_columns,
-    index=3
+    "Vertical axis",
+    options=numeric_columns,
+    index=3,
+    format_func=pretty_label
+)
+
+st.sidebar.markdown("---")
+
+st.sidebar.caption(
+    "CSX 2003 Principles of Statistics - Term Project"
 )
 
 
@@ -140,534 +353,693 @@ else:
     filtered_df = df.copy()
 
 
-# -------------------------------------------------
-# Overview
-# -------------------------------------------------
-
-st.subheader(
-    "Dataset Overview"
+analysis_species = sorted(
+    filtered_df["species"].unique()
 )
-
-overview1, overview2, overview3, overview4 = (
-    st.columns(4)
-)
-
-overview1.metric(
-    "Observations",
-    len(filtered_df)
-)
-
-overview2.metric(
-    "Selected Species",
-    filtered_df["species"].nunique()
-)
-
-overview3.metric(
-    "Mean",
-    f"{filtered_df[selected_variable].mean():.3f} cm"
-)
-
-overview4.metric(
-    "Standard Deviation",
-    f"{filtered_df[selected_variable].std():.3f} cm"
-)
-
-
-with st.expander(
-    "View Dataset"
-):
-
-    st.dataframe(
-        filtered_df,
-        use_container_width=True
-    )
 
 
 # -------------------------------------------------
-# Descriptive statistics
+# Dynamic insight
 # -------------------------------------------------
 
-st.subheader(
-    "Descriptive Statistics"
-)
-
-stats_result = descriptive_stats(
+corr_matrix = (
     filtered_df[
-        selected_variable
-    ].tolist()
-)
-
-stats_table = pd.DataFrame({
-    "Statistic": [
-        "Mean",
-        "Median",
-        "Mode",
-        "Standard Deviation",
-        "Variance",
-        "Range",
-        "IQR",
-        "Skewness",
-        "Kurtosis"
-    ],
-
-    "Value": [
-        stats_result["mean"],
-        stats_result["median"],
-        stats_result["mode"],
-        stats_result["std"],
-        stats_result["variance"],
-        stats_result["range"],
-        stats_result["iqr"],
-        stats_result["skewness"],
-        stats_result["kurtosis"]
-    ]
-})
-
-stats_table["Value"] = (
-    stats_table["Value"]
-    .round(3)
-)
-
-st.dataframe(
-    stats_table,
-    use_container_width=True,
-    hide_index=True
-)
-
-
-# -------------------------------------------------
-# Distribution analysis
-# -------------------------------------------------
-
-st.subheader(
-    "Distribution Analysis"
-)
-
-distribution_left, distribution_right = (
-    st.columns(2)
-)
-
-with distribution_left:
-
-    st.markdown(
-        "#### Histogram + Normal Distribution"
-    )
-
-    histogram_fig = (
-        plot_histogram_with_distribution(
-            filtered_df,
-            selected_variable,
-            distribution="normal"
-        )
-    )
-
-    st.pyplot(
-        histogram_fig
-    )
-
-
-with distribution_right:
-
-    st.markdown(
-        "#### Q-Q Plot"
-    )
-
-    qq_fig = plot_qq_comparison(
-        filtered_df,
-        selected_variable
-    )
-
-    st.pyplot(
-        qq_fig
-    )
-
-
-# -------------------------------------------------
-# Normal distribution fitting
-# -------------------------------------------------
-
-st.markdown(
-    "#### Normal Distribution Fit"
-)
-
-normal_result = fit_distribution(
-    filtered_df[
-        selected_variable
-    ].tolist(),
-    "normal"
-)
-
-normal_mean = (
-    normal_result["params"][0]
-)
-
-normal_std = (
-    normal_result["params"][1]
-)
-
-normal_ks = (
-    normal_result["ks_statistic"]
-)
-
-normal_p = (
-    normal_result["p_value"]
-)
-
-normal1, normal2, normal3, normal4 = (
-    st.columns(4)
-)
-
-normal1.metric(
-    "Fitted Mean",
-    f"{normal_mean:.3f}"
-)
-
-normal2.metric(
-    "Fitted Std Dev",
-    f"{normal_std:.3f}"
-)
-
-normal3.metric(
-    "KS Statistic",
-    f"{normal_ks:.4f}"
-)
-
-normal4.metric(
-    "P-Value",
-    f"{normal_p:.3e}"
-)
-
-
-if normal_p > 0.05:
-
-    st.info(
-        "There is not enough evidence to reject "
-        "normality at α = 0.05."
-    )
-
-else:
-
-    st.warning(
-        "The selected data shows evidence of "
-        "departure from normality at α = 0.05."
-    )
-
-
-# -------------------------------------------------
-# Boxplots
-# -------------------------------------------------
-
-st.subheader(
-    "Comparison Across Species"
-)
-
-boxplot_fig = (
-    plot_boxplots_by_category(
-        filtered_df,
-        selected_variable,
-        "species"
-    )
-)
-
-st.pyplot(
-    boxplot_fig
-)
-
-
-# -------------------------------------------------
-# Interactive scatter plot
-# -------------------------------------------------
-
-st.subheader(
-    "Interactive Relationship Between Measurements"
-)
-
-scatter_fig = (
-    create_interactive_scatter(
-        filtered_df,
-        scatter_x,
-        scatter_y,
-        "species"
-    )
-)
-
-st.plotly_chart(
-    scatter_fig,
-    use_container_width=True
-)
-
-
-# -------------------------------------------------
-# Correlation heatmap
-# -------------------------------------------------
-
-st.subheader(
-    "Correlation Analysis"
-)
-
-correlation_fig = (
-    create_correlation_heatmap(
-        filtered_df,
         numeric_columns
-    )
+    ]
+    .corr()
 )
 
-st.pyplot(
-    correlation_fig
+lower_triangle = corr_matrix.where(
+    np.tril(
+        np.ones(
+            corr_matrix.shape
+        ),
+        k=-1
+    ).astype(bool)
 )
 
+strongest_pair = (
+    lower_triangle
+    .abs()
+    .stack()
+    .idxmax()
+)
 
-with st.expander(
-    "View Correlation Matrix"
-):
+strongest_r = corr_matrix.loc[
+    strongest_pair[0],
+    strongest_pair[1]
+]
 
-    correlation_matrix = (
-        filtered_df[
-            numeric_columns
+
+# -------------------------------------------------
+# Tabs
+# -------------------------------------------------
+
+tab_overview, tab_distribution, tab_relationships, tab_inference, tab_data = (
+    st.tabs(
+        [
+            "Overview",
+            "Distributions",
+            "Relationships",
+            "Tests & inference",
+            "Dataset"
         ]
-        .corr()
-        .round(3)
+    )
+)
+
+
+# =================================================
+# OVERVIEW
+# =================================================
+
+with tab_overview:
+
+    st.markdown(
+        '<div class="section-label">At a glance</div>',
+        unsafe_allow_html=True
     )
 
-    st.dataframe(
-        correlation_matrix,
-        use_container_width=True
+    st.markdown(
+        '<div class="section-copy">'
+        'A concise view of the dataset currently selected.'
+        '</div>',
+        unsafe_allow_html=True
     )
 
+    metric1, metric2, metric3, metric4 = (
+        st.columns(4)
+    )
 
-# -------------------------------------------------
-# Species averages
-# -------------------------------------------------
+    metric1.metric(
+        "Observations",
+        len(filtered_df)
+    )
 
-st.subheader(
-    "Mean Measurements by Species"
-)
-
-species_summary = (
-    filtered_df
-    .groupby(
-        "species"
-    )[numeric_columns]
-    .mean()
-    .round(3)
-)
-
-st.dataframe(
-    species_summary,
-    use_container_width=True
-)
-
-
-# -------------------------------------------------
-# Confidence intervals
-# -------------------------------------------------
-
-st.subheader(
-    "95% Bootstrap Confidence Interval"
-)
-
-ci_lower, ci_upper = (
-    bootstrap_ci(
+    metric2.metric(
+        "Species",
         filtered_df[
-            selected_variable
-        ].tolist(),
-        np.mean,
-        n_bootstrap=5000,
-        confidence=0.95
-    )
-)
-
-ci1, ci2, ci3 = (
-    st.columns(3)
-)
-
-ci1.metric(
-    "Sample Mean",
-    f"{filtered_df[selected_variable].mean():.3f} cm"
-)
-
-ci2.metric(
-    "Lower 95% CI",
-    f"{ci_lower:.3f} cm"
-)
-
-ci3.metric(
-    "Upper 95% CI",
-    f"{ci_upper:.3f} cm"
-)
-
-
-# -------------------------------------------------
-# Hypothesis testing
-# -------------------------------------------------
-
-st.subheader(
-    "Hypothesis Testing"
-)
-
-st.write(
-    """
-    Welch's two-sample t-test compares the selected
-    measurement between two Iris species.
-    """
-)
-
-species_options = sorted(
-    df["species"].unique()
-)
-
-test1, test2 = (
-    st.columns(2)
-)
-
-with test1:
-
-    group1_name = st.selectbox(
-        "First species",
-        species_options,
-        index=0,
-        key="test_group_1"
+            "species"
+        ].nunique()
     )
 
-
-with test2:
-
-    group2_name = st.selectbox(
-        "Second species",
-        species_options,
-        index=1,
-        key="test_group_2"
+    metric3.metric(
+        f"Mean {pretty_label(selected_variable)}",
+        f"{filtered_df[selected_variable].mean():.3f} cm"
     )
 
-
-if group1_name == group2_name:
-
-    st.warning(
-        "Please choose two different species."
+    metric4.metric(
+        "Standard deviation",
+        f"{filtered_df[selected_variable].std():.3f} cm"
     )
 
-else:
+    st.markdown(
+        f"""
+        <div class="insight">
+            <div class="insight-label">
+                Key relationship
+            </div>
+            <div class="insight-text">
+                {pretty_label(strongest_pair[0])} and
+                {pretty_label(strongest_pair[1])}
+                show the strongest relationship in the current data
+                (r = {strongest_r:.3f}).
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    group1_data = df[
-        df["species"]
-        == group1_name
-    ][selected_variable].tolist()
+    left, right = st.columns(
+        [1, 1.15]
+    )
 
-    group2_data = df[
-        df["species"]
-        == group2_name
-    ][selected_variable].tolist()
+    with left:
 
-    ttest_result = (
-        hypothesis_test(
-            group1_data,
-            group2_data,
-            test_type="t-test"
+        st.markdown(
+            "### Descriptive statistics"
+        )
+
+        statistics = descriptive_stats(
+            filtered_df[
+                selected_variable
+            ].tolist()
+        )
+
+        stats_table = pd.DataFrame(
+            {
+                "Statistic": [
+                    "Mean",
+                    "Median",
+                    "Mode",
+                    "Standard deviation",
+                    "Variance",
+                    "Range",
+                    "IQR",
+                    "Skewness",
+                    "Kurtosis"
+                ],
+                "Value": [
+                    statistics["mean"],
+                    statistics["median"],
+                    statistics["mode"],
+                    statistics["std"],
+                    statistics["variance"],
+                    statistics["range"],
+                    statistics["iqr"],
+                    statistics["skewness"],
+                    statistics["kurtosis"]
+                ]
+            }
+        )
+
+        stats_table[
+            "Value"
+        ] = stats_table[
+            "Value"
+        ].round(3)
+
+        st.dataframe(
+            stats_table,
+            use_container_width=True,
+            hide_index=True
+        )
+
+    with right:
+
+        st.markdown(
+            "### Species profile"
+        )
+
+        species_summary = (
+            filtered_df
+            .groupby(
+                "species"
+            )[numeric_columns]
+            .mean()
+            .round(3)
+        )
+
+        species_summary.index = (
+            species_summary
+            .index
+            .str.title()
+        )
+
+        species_summary.columns = [
+            pretty_label(column)
+            for column in species_summary.columns
+        ]
+
+        st.dataframe(
+            species_summary,
+            use_container_width=True
+        )
+
+
+# =================================================
+# DISTRIBUTIONS
+# =================================================
+
+with tab_distribution:
+
+    st.markdown(
+        '<div class="section-label">Distribution profile</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        f"""
+        <div class="section-copy">
+            Examine the shape and normality of
+            {pretty_label(selected_variable).lower()}.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    chart_left, chart_right = (
+        st.columns(2)
+    )
+
+    with chart_left:
+
+        histogram = (
+            plot_histogram_with_distribution(
+                filtered_df,
+                selected_variable,
+                distribution="normal"
+            )
+        )
+
+        st.pyplot(
+            histogram,
+            use_container_width=True
+        )
+
+    with chart_right:
+
+        qq_plot = (
+            plot_qq_comparison(
+                filtered_df,
+                selected_variable
+            )
+        )
+
+        st.pyplot(
+            qq_plot,
+            use_container_width=True
+        )
+
+    distribution_result = (
+        fit_distribution(
+            filtered_df[
+                selected_variable
+            ].tolist(),
+            "normal"
         )
     )
 
-    test_result1, test_result2, test_result3 = (
-        st.columns(3)
+    dist1, dist2, dist3, dist4 = (
+        st.columns(4)
     )
 
-    test_result1.metric(
-        f"{group1_name.title()} Mean",
-        f"{np.mean(group1_data):.3f} cm"
+    dist1.metric(
+        "Fitted mean",
+        f"{distribution_result['params'][0]:.3f}"
     )
 
-    test_result2.metric(
-        f"{group2_name.title()} Mean",
-        f"{np.mean(group2_data):.3f} cm"
+    dist2.metric(
+        "Fitted SD",
+        f"{distribution_result['params'][1]:.3f}"
     )
 
-    test_result3.metric(
-        "P-Value",
-        f"{ttest_result['p_value']:.3e}"
+    dist3.metric(
+        "KS statistic",
+        f"{distribution_result['ks_statistic']:.4f}"
     )
 
-    st.write(
-        f"**T-statistic:** "
-        f"{ttest_result['statistic']:.4f}"
+    dist4.metric(
+        "P-value",
+        format_p_value(
+            distribution_result[
+                "p_value"
+            ]
+        )
     )
 
-    if (
-        ttest_result[
-            "p_value"
-        ] < 0.05
-    ):
+    if distribution_result[
+        "p_value"
+    ] > 0.05:
 
-        st.success(
-            "Reject H₀: A statistically significant "
-            "difference exists between the two species."
+        st.info(
+            "The current data does not provide strong evidence "
+            "against a normal distribution at α = 0.05."
         )
 
     else:
 
-        st.info(
-            "Fail to reject H₀: No statistically "
-            "significant difference was detected."
+        st.warning(
+            "The current data shows evidence of departure "
+            "from normality at α = 0.05."
+        )
+
+    st.divider()
+
+    st.markdown(
+        "### Species comparison"
+    )
+
+    boxplot = (
+        plot_boxplots_by_category(
+            filtered_df,
+            selected_variable,
+            "species"
+        )
+    )
+
+    st.pyplot(
+        boxplot,
+        use_container_width=True
+    )
+
+
+# =================================================
+# RELATIONSHIPS
+# =================================================
+
+with tab_relationships:
+
+    st.markdown(
+        '<div class="section-label">Relationships</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        """
+        <div class="section-copy">
+            Explore how the numerical flower measurements move together.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    scatter = (
+        create_interactive_scatter(
+            filtered_df,
+            scatter_x,
+            scatter_y,
+            "species"
+        )
+    )
+
+    st.plotly_chart(
+        scatter,
+        use_container_width=True
+    )
+
+    st.divider()
+
+    heatmap = (
+        create_correlation_heatmap(
+            filtered_df,
+            numeric_columns
+        )
+    )
+
+    st.pyplot(
+        heatmap,
+        use_container_width=True
+    )
+
+    with st.expander(
+        "Correlation values"
+    ):
+
+        correlation_table = (
+            filtered_df[
+                numeric_columns
+            ]
+            .corr()
+            .round(3)
+        )
+
+        correlation_table.index = [
+            pretty_label(index)
+            for index in correlation_table.index
+        ]
+
+        correlation_table.columns = [
+            pretty_label(column)
+            for column in correlation_table.columns
+        ]
+
+        st.dataframe(
+            correlation_table,
+            use_container_width=True
         )
 
 
-# -------------------------------------------------
-# One-way ANOVA
-# -------------------------------------------------
+# =================================================
+# TESTS & INFERENCE
+# =================================================
 
-st.subheader(
-    "One-Way ANOVA"
-)
+with tab_inference:
 
-anova_groups = []
-
-for species in species_options:
-
-    species_values = df[
-        df["species"]
-        == species
-    ][selected_variable].tolist()
-
-    anova_groups.append(
-        species_values
+    st.markdown(
+        '<div class="section-label">Estimation</div>',
+        unsafe_allow_html=True
     )
 
-
-anova_result = (
-    anova_test(
-        *anova_groups
-    )
-)
-
-anova1, anova2 = (
-    st.columns(2)
-)
-
-anova1.metric(
-    "F-Statistic",
-    f"{anova_result['f_statistic']:.3f}"
-)
-
-anova2.metric(
-    "P-Value",
-    f"{anova_result['p_value']:.3e}"
-)
-
-
-if (
-    anova_result[
-        "p_value"
-    ] < 0.05
-):
-
-    st.success(
-        "Reject H₀: At least one Iris species "
-        "has a significantly different mean."
+    st.markdown(
+        """
+        <div class="section-copy">
+            Confidence intervals and hypothesis tests provide
+            inferential evidence beyond the descriptive summaries.
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-else:
+    ci_lower, ci_upper = (
+        bootstrap_ci(
+            filtered_df[
+                selected_variable
+            ].tolist(),
+            np.mean,
+            n_bootstrap=5000,
+            confidence=0.95
+        )
+    )
 
-    st.info(
-        "Fail to reject H₀: No statistically significant "
-        "difference was detected across species."
+    ci1, ci2, ci3 = (
+        st.columns(3)
+    )
+
+    ci1.metric(
+        "Sample mean",
+        f"{filtered_df[selected_variable].mean():.3f} cm"
+    )
+
+    ci2.metric(
+        "95% CI · lower",
+        f"{ci_lower:.3f} cm"
+    )
+
+    ci3.metric(
+        "95% CI · upper",
+        f"{ci_upper:.3f} cm"
+    )
+
+    st.divider()
+
+    st.markdown(
+        "### Two-species comparison"
+    )
+
+    st.caption(
+        "Welch two-sample t-test for the selected measurement."
+    )
+
+    if len(
+        analysis_species
+    ) < 2:
+
+        st.warning(
+            "Select at least two species in the sidebar."
+        )
+
+    else:
+
+        test_col1, test_col2 = (
+            st.columns(2)
+        )
+
+        with test_col1:
+
+            first_species = (
+                st.selectbox(
+                    "First species",
+                    analysis_species,
+                    index=0,
+                    key="first_species",
+                    format_func=lambda value: value.title()
+                )
+            )
+
+        with test_col2:
+
+            second_species = (
+                st.selectbox(
+                    "Second species",
+                    analysis_species,
+                    index=1,
+                    key="second_species",
+                    format_func=lambda value: value.title()
+                )
+            )
+
+        if (
+            first_species
+            == second_species
+        ):
+
+            st.warning(
+                "Choose two different species."
+            )
+
+        else:
+
+            group1 = filtered_df[
+                filtered_df[
+                    "species"
+                ] == first_species
+            ][selected_variable].tolist()
+
+            group2 = filtered_df[
+                filtered_df[
+                    "species"
+                ] == second_species
+            ][selected_variable].tolist()
+
+            result = hypothesis_test(
+                group1,
+                group2,
+                test_type="t-test"
+            )
+
+            test1, test2, test3 = (
+                st.columns(3)
+            )
+
+            test1.metric(
+                f"{first_species.title()} mean",
+                f"{np.mean(group1):.3f} cm"
+            )
+
+            test2.metric(
+                f"{second_species.title()} mean",
+                f"{np.mean(group2):.3f} cm"
+            )
+
+            test3.metric(
+                "P-value",
+                format_p_value(
+                    result["p_value"]
+                )
+            )
+
+            st.caption(
+                f"T-statistic: "
+                f"{result['statistic']:.4f}"
+            )
+
+            if result[
+                "p_value"
+            ] < 0.05:
+
+                st.success(
+                    "Reject H₀ — the species differ significantly "
+                    "for the selected measurement."
+                )
+
+            else:
+
+                st.info(
+                    "Fail to reject H₀ — no statistically significant "
+                    "difference was detected."
+                )
+
+    st.divider()
+
+    st.markdown(
+        "### Across-species comparison"
+    )
+
+    st.caption(
+        "One-way ANOVA for the species currently included."
+    )
+
+    if len(
+        analysis_species
+    ) < 2:
+
+        st.warning(
+            "Select at least two species in the sidebar."
+        )
+
+    else:
+
+        groups = []
+
+        for species in analysis_species:
+
+            values = filtered_df[
+                filtered_df[
+                    "species"
+                ] == species
+            ][selected_variable].tolist()
+
+            groups.append(
+                values
+            )
+
+        result = anova_test(
+            *groups
+        )
+
+        anova1, anova2 = (
+            st.columns(2)
+        )
+
+        anova1.metric(
+            "F-statistic",
+            f"{result['f_statistic']:.3f}"
+        )
+
+        anova2.metric(
+            "P-value",
+            format_p_value(
+                result[
+                    "p_value"
+                ]
+            )
+        )
+
+        if result[
+            "p_value"
+        ] < 0.05:
+
+            st.success(
+                "Reject H₀ — at least one species mean differs significantly."
+            )
+
+        else:
+
+            st.info(
+                "Fail to reject H₀ — no significant mean difference was detected."
+            )
+
+
+# =================================================
+# DATASET
+# =================================================
+
+with tab_data:
+
+    st.markdown(
+        '<div class="section-label">Dataset</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        """
+        <div class="section-copy">
+            The cleaned observations currently included in the analysis.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.dataframe(
+        filtered_df,
+        use_container_width=True
+    )
+
+    csv_data = (
+        filtered_df
+        .to_csv(
+            index=False
+        )
+        .encode(
+            "utf-8"
+        )
+    )
+
+    st.download_button(
+        "Download filtered CSV",
+        data=csv_data,
+        file_name="iris_filtered_data.csv",
+        mime="text/csv"
     )
 
 
@@ -678,6 +1050,5 @@ else:
 st.divider()
 
 st.caption(
-    "Statistics Superstars – "
-    "Data Detective: Exploring Real-World Distributions"
+    "Data Detective · Exploring Real-World Distributions"
 )
