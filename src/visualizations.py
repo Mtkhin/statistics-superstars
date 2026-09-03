@@ -9,9 +9,9 @@ from matplotlib.colors import LinearSegmentedColormap
 from plotly.graph_objects import Figure as PlotlyFigure
 
 
-# -------------------------------------------------
-# Visual identity
-# -------------------------------------------------
+# =================================================
+# VISUAL IDENTITY
+# =================================================
 
 BACKGROUND = "#0E1110"
 SURFACE = "#171B18"
@@ -25,6 +25,7 @@ GOLD = "#C4A66A"
 FOREST = "#71806A"
 OXBLOOD = "#8A5658"
 
+
 SPECIES_PALETTE = {
     "setosa": GOLD,
     "versicolor": FOREST,
@@ -32,11 +33,37 @@ SPECIES_PALETTE = {
 }
 
 
-# -------------------------------------------------
-# Helpers
-# -------------------------------------------------
+# =================================================
+# GLOBAL MATPLOTLIB DARK THEME
+# =================================================
 
-def _check_column(data: pd.DataFrame, column: str):
+plt.rcParams.update({
+    "figure.facecolor": BACKGROUND,
+    "axes.facecolor": SURFACE,
+    "savefig.facecolor": BACKGROUND,
+
+    "text.color": TEXT,
+    "axes.labelcolor": MUTED,
+    "axes.titlecolor": TEXT,
+
+    "xtick.color": MUTED,
+    "ytick.color": MUTED,
+
+    "axes.edgecolor": BORDER,
+    "grid.color": BORDER,
+
+    "font.family": "DejaVu Sans"
+})
+
+
+# =================================================
+# HELPERS
+# =================================================
+
+def _check_column(
+    data: pd.DataFrame,
+    column: str
+):
     """Check whether a column exists."""
 
     if column not in data.columns:
@@ -45,31 +72,113 @@ def _check_column(data: pd.DataFrame, column: str):
         )
 
 
-def _style_axes(ax):
-    """Apply project styling to Matplotlib axes."""
+def _pretty_label(
+    value: str
+) -> str:
+    """Convert snake_case into a readable label."""
 
-    ax.set_facecolor(SURFACE)
+    return (
+        value
+        .replace("_", " ")
+        .title()
+    )
+
+
+def _set_title(
+    ax,
+    text: str,
+    fontsize: int = 15,
+    pad: int = 14
+):
+    """
+    Create a guaranteed light-colored left-aligned title.
+
+    Matplotlib uses separate title objects for left,
+    center, and right aligned titles.
+    """
+
+    # Remove any automatic centered title.
+    ax.set_title(
+        "",
+        loc="center"
+    )
+
+    title = ax.set_title(
+        text,
+        loc="left",
+        fontsize=fontsize,
+        fontweight="semibold",
+        color=TEXT,
+        pad=pad
+    )
+
+    title.set_color(
+        TEXT
+    )
+
+    return title
+
+
+def _style_axes(
+    ax,
+    show_grid: bool = True
+):
+    """Apply dark styling to Matplotlib axes."""
+
+    ax.set_facecolor(
+        SURFACE
+    )
 
     ax.tick_params(
-        colors=MUTED
+        colors=MUTED,
+        labelsize=10
     )
 
-    ax.xaxis.label.set_color(TEXT)
-    ax.yaxis.label.set_color(TEXT)
-    ax.title.set_color(TEXT)
+    ax.xaxis.label.set_color(
+        MUTED
+    )
+
+    ax.yaxis.label.set_color(
+        MUTED
+    )
+
+    # Style all possible Matplotlib title positions.
+    ax.title.set_color(
+        TEXT
+    )
+
+    ax._left_title.set_color(
+        TEXT
+    )
+
+    ax._right_title.set_color(
+        TEXT
+    )
 
     for spine in ax.spines.values():
-        spine.set_color(BORDER)
 
-    ax.grid(
-        alpha=0.12,
-        color=MUTED
-    )
+        spine.set_color(
+            BORDER
+        )
+
+    if show_grid:
+
+        ax.grid(
+            color=BORDER,
+            alpha=0.35,
+            linewidth=0.6
+        )
+
+    else:
+
+        ax.grid(
+            False
+        )
 
 
-# -------------------------------------------------
-# Professor-required visualisation functions
-# -------------------------------------------------
+# =================================================
+# HISTOGRAM + FITTED DISTRIBUTION
+# =================================================
 
 def plot_histogram_with_distribution(
     data: pd.DataFrame,
@@ -78,17 +187,20 @@ def plot_histogram_with_distribution(
     distribution: str = "normal"
 ):
     """
-    Plot a histogram with a fitted distribution.
+    Plot a histogram with a fitted probability distribution.
 
-    Supported distributions:
-        - normal
-        - exponential
+    Supported:
+        normal
+        exponential
 
     Returns:
         matplotlib Figure
     """
 
-    _check_column(data, column)
+    _check_column(
+        data,
+        column
+    )
 
     values = (
         data[column]
@@ -97,6 +209,7 @@ def plot_histogram_with_distribution(
     )
 
     if len(values) == 0:
+
         raise ValueError(
             "No valid data available for plotting."
         )
@@ -112,17 +225,21 @@ def plot_histogram_with_distribution(
         density=True,
         color=FOREST,
         edgecolor=BACKGROUND,
-        alpha=0.88,
+        linewidth=1,
+        alpha=0.90,
         label="Observed data"
     )
 
     x_values = np.linspace(
         values.min(),
         values.max(),
-        300
+        400
     )
 
-    distribution = distribution.lower()
+    distribution = (
+        distribution
+        .lower()
+    )
 
     if distribution == "normal":
 
@@ -136,7 +253,9 @@ def plot_histogram_with_distribution(
             scale=std
         )
 
-        label = "Fitted normal"
+        distribution_label = (
+            "Fitted normal"
+        )
 
     elif distribution == "exponential":
 
@@ -150,7 +269,9 @@ def plot_histogram_with_distribution(
             scale=scale
         )
 
-        label = "Fitted exponential"
+        distribution_label = (
+            "Fitted exponential"
+        )
 
     else:
 
@@ -163,116 +284,210 @@ def plot_histogram_with_distribution(
         x_values,
         fitted_density,
         color=GOLD,
-        linewidth=2.2,
-        label=label
-    )
-
-    ax.set_title(
-        f"Distribution of "
-        f"{column.replace('_', ' ').title()}",
-        loc="left",
-        fontweight="bold"
+        linewidth=2.4,
+        label=distribution_label
     )
 
     ax.set_xlabel(
-        f"{column.replace('_', ' ').title()} (cm)"
+        f"{_pretty_label(column)} (cm)"
     )
 
     ax.set_ylabel(
         "Density"
     )
 
-    _style_axes(ax)
-
-    legend = ax.legend(
-        frameon=False
+    _style_axes(
+        ax
     )
 
-    for text in legend.get_texts():
-        text.set_color(MUTED)
+    _set_title(
+        ax,
+        f"Distribution of {_pretty_label(column)}"
+    )
+
+    legend = ax.legend(
+        frameon=False,
+        fontsize=9
+    )
+
+    for legend_text in legend.get_texts():
+
+        legend_text.set_color(
+            MUTED
+        )
 
     fig.tight_layout()
 
     return fig
 
+
+# =================================================
+# CORRELATION HEATMAP
+# =================================================
 
 def create_correlation_heatmap(
     data: pd.DataFrame,
     numerical_columns: list
 ):
     """
-    Create a styled correlation heatmap.
+    Create a dark-themed correlation heatmap.
 
     Returns:
         matplotlib Figure
     """
 
     for column in numerical_columns:
+
         _check_column(
             data,
             column
         )
 
     correlation_matrix = (
-        data[numerical_columns]
+        data[
+            numerical_columns
+        ]
         .corr()
     )
 
-    custom_cmap = LinearSegmentedColormap.from_list(
-        "iris_correlation",
-        [
-            OXBLOOD,
-            SURFACE,
-            GOLD
-        ]
+    display_matrix = (
+        correlation_matrix
+        .copy()
+    )
+
+    display_matrix.index = [
+        _pretty_label(value)
+        for value
+        in display_matrix.index
+    ]
+
+    display_matrix.columns = [
+        _pretty_label(value)
+        for value
+        in display_matrix.columns
+    ]
+
+    custom_cmap = (
+        LinearSegmentedColormap
+        .from_list(
+            "iris_correlation",
+            [
+                OXBLOOD,
+                SURFACE,
+                GOLD
+            ]
+        )
     )
 
     fig, ax = plt.subplots(
-        figsize=(8, 6),
+        figsize=(9, 6.2),
         facecolor=BACKGROUND
     )
 
-    sns.heatmap(
-        correlation_matrix,
+    heatmap = sns.heatmap(
+        display_matrix,
         annot=True,
         fmt=".2f",
         cmap=custom_cmap,
+        vmin=-1,
+        vmax=1,
         center=0,
-        linewidths=0.8,
+        linewidths=1,
         linecolor=BACKGROUND,
         cbar_kws={
-            "shrink": 0.8
+            "shrink": 0.75,
+            "pad": 0.03
+        },
+        annot_kws={
+            "fontsize": 11
         },
         ax=ax
     )
 
-    ax.set_title(
-        "Correlation Between Measurements",
-        loc="left",
-        fontweight="bold"
-    )
-
-    ax.tick_params(
-        colors=MUTED
-    )
-
-    for label in ax.get_xticklabels():
-        label.set_color(MUTED)
-
-    for label in ax.get_yticklabels():
-        label.set_color(MUTED)
-
-    for text in ax.texts:
-        text.set_color(TEXT)
+    ax.set_xlabel("")
+    ax.set_ylabel("")
 
     ax.set_facecolor(
         SURFACE
+    )
+
+    ax.tick_params(
+        colors=MUTED,
+        labelsize=10
+    )
+
+    ax.set_xticklabels(
+        ax.get_xticklabels(),
+        rotation=0
+    )
+
+    ax.set_yticklabels(
+        ax.get_yticklabels(),
+        rotation=0
+    )
+
+    _set_title(
+        ax,
+        "Correlation Between Measurements",
+        fontsize=16,
+        pad=18
+    )
+
+    # Improve annotation visibility.
+    for text_item in ax.texts:
+
+        try:
+
+            value = float(
+                text_item.get_text()
+            )
+
+        except ValueError:
+
+            continue
+
+        if value >= 0.55:
+
+            text_item.set_color(
+                BACKGROUND
+            )
+
+        else:
+
+            text_item.set_color(
+                TEXT
+            )
+
+        if abs(value) >= 0.80:
+
+            text_item.set_fontweight(
+                "bold"
+            )
+
+    # Style colorbar.
+    colorbar = (
+        heatmap
+        .collections[0]
+        .colorbar
+    )
+
+    colorbar.ax.tick_params(
+        colors=MUTED,
+        labelsize=9
+    )
+
+    colorbar.outline.set_edgecolor(
+        BORDER
     )
 
     fig.tight_layout()
 
     return fig
 
+
+# =================================================
+# BOXPLOTS
+# =================================================
 
 def plot_boxplots_by_category(
     data: pd.DataFrame,
@@ -280,7 +495,7 @@ def plot_boxplots_by_category(
     category_column: str
 ):
     """
-    Create a categorical boxplot.
+    Create boxplots grouped by category.
 
     Returns:
         matplotlib Figure
@@ -296,38 +511,42 @@ def plot_boxplots_by_category(
         category_column
     )
 
-    fig, ax = plt.subplots(
-        figsize=(8, 5),
-        facecolor=BACKGROUND
+    plot_data = (
+        data.copy()
     )
 
-    available_categories = (
-        data[category_column]
-        .dropna()
-        .unique()
+    plot_data[
+        category_column
+    ] = (
+        plot_data[
+            category_column
+        ]
+        .astype(str)
+        .str
+        .title()
     )
 
     palette = {
-        category: SPECIES_PALETTE.get(
-            str(category).lower(),
-            GOLD
-        )
-        for category in available_categories
+        "Setosa": GOLD,
+        "Versicolor": FOREST,
+        "Virginica": OXBLOOD
     }
 
-    sns.boxplot(
-        data=data,
-        x=category_column,
-        y=numerical_column,
-        palette=palette,
-        ax=ax
+    fig, ax = plt.subplots(
+        figsize=(8.5, 5.3),
+        facecolor=BACKGROUND
     )
 
-    ax.set_title(
-        f"{numerical_column.replace('_', ' ').title()} "
-        "Across Species",
-        loc="left",
-        fontweight="bold"
+    sns.boxplot(
+        data=plot_data,
+        x=category_column,
+        y=numerical_column,
+        hue=category_column,
+        palette=palette,
+        legend=False,
+        width=0.55,
+        linewidth=1.1,
+        ax=ax
     )
 
     ax.set_xlabel(
@@ -335,15 +554,31 @@ def plot_boxplots_by_category(
     )
 
     ax.set_ylabel(
-        f"{numerical_column.replace('_', ' ').title()} (cm)"
+        f"{_pretty_label(numerical_column)} (cm)"
     )
 
-    _style_axes(ax)
+    _style_axes(
+        ax
+    )
+
+    ax.grid(
+        axis="x",
+        visible=False
+    )
+
+    _set_title(
+        ax,
+        f"{_pretty_label(numerical_column)} Across Species"
+    )
 
     fig.tight_layout()
 
     return fig
 
+
+# =================================================
+# INTERACTIVE SCATTER
+# =================================================
 
 def create_interactive_scatter(
     data: pd.DataFrame,
@@ -369,6 +604,7 @@ def create_interactive_scatter(
     )
 
     if category_column is not None:
+
         _check_column(
             data,
             category_column
@@ -397,53 +633,90 @@ def create_interactive_scatter(
     fig.update_layout(
         title={
             "text": (
-                f"{x_column.replace('_', ' ').title()} "
-                f"vs {y_column.replace('_', ' ').title()}"
+                f"{_pretty_label(x_column)} "
+                f"vs {_pretty_label(y_column)}"
             ),
-            "x": 0,
-            "xanchor": "left"
+            "x": 0.01,
+            "xanchor": "left",
+            "font": {
+                "size": 20,
+                "color": TEXT
+            }
         },
+
         paper_bgcolor=BACKGROUND,
         plot_bgcolor=SURFACE,
+
         font={
             "color": TEXT
         },
+
         xaxis={
             "title": (
-                f"{x_column.replace('_', ' ').title()} (cm)"
+                f"{_pretty_label(x_column)} (cm)"
             ),
             "gridcolor": BORDER,
-            "zerolinecolor": BORDER
+            "zerolinecolor": BORDER,
+            "tickfont": {
+                "color": MUTED
+            },
+            "title_font": {
+                "color": MUTED
+            }
         },
+
         yaxis={
             "title": (
-                f"{y_column.replace('_', ' ').title()} (cm)"
+                f"{_pretty_label(y_column)} (cm)"
             ),
             "gridcolor": BORDER,
-            "zerolinecolor": BORDER
+            "zerolinecolor": BORDER,
+            "tickfont": {
+                "color": MUTED
+            },
+            "title_font": {
+                "color": MUTED
+            }
         },
+
         legend={
             "title": {
                 "text": "Species"
+            },
+            "font": {
+                "color": MUTED
             }
         },
+
+        hoverlabel={
+            "bgcolor": SURFACE_LIGHT,
+            "font_color": TEXT,
+            "bordercolor": BORDER
+        },
+
         margin={
-            "l": 20,
-            "r": 20,
-            "t": 55,
-            "b": 20
-        }
+            "l": 25,
+            "r": 25,
+            "t": 65,
+            "b": 25
+        },
+
+        height=520
     )
 
     return fig
 
+
+# =================================================
+# Q-Q PLOT
+# =================================================
 
 def plot_qq_comparison(
     data: pd.DataFrame,
     column: str
 ):
     """
-    Create a styled Q-Q plot.
+    Create a Q-Q plot against a theoretical normal distribution.
 
     Returns:
         matplotlib Figure
@@ -460,12 +733,13 @@ def plot_qq_comparison(
     )
 
     if len(values) == 0:
+
         raise ValueError(
             "No valid data available for plotting."
         )
 
     fig, ax = plt.subplots(
-        figsize=(7, 5),
+        figsize=(7.5, 5),
         facecolor=BACKGROUND
     )
 
@@ -475,45 +749,74 @@ def plot_qq_comparison(
         plot=ax
     )
 
-    lines = ax.get_lines()
+    # IMPORTANT:
+    # scipy automatically creates "Probability Plot".
+    # Remove that title completely.
+    ax.set_title(
+        "",
+        loc="center"
+    )
+
+    lines = (
+        ax.get_lines()
+    )
 
     if len(lines) >= 1:
+
         lines[0].set_markerfacecolor(
             FOREST
         )
+
         lines[0].set_markeredgecolor(
             FOREST
         )
+
+        lines[0].set_markersize(
+            5
+        )
+
         lines[0].set_alpha(
-            0.8
+            0.82
         )
 
     if len(lines) >= 2:
+
         lines[1].set_color(
             GOLD
         )
+
         lines[1].set_linewidth(
-            2
+            2.2
         )
 
-    ax.set_title(
-        f"Q-Q Plot · "
-        f"{column.replace('_', ' ').title()}",
-        loc="left",
-        fontweight="bold"
+    ax.set_xlabel(
+        "Theoretical Quantiles"
     )
 
-    _style_axes(ax)
+    ax.set_ylabel(
+        "Ordered Values"
+    )
+
+    _style_axes(
+        ax
+    )
+
+    _set_title(
+        ax,
+        f"Q-Q Plot · {_pretty_label(column)}"
+    )
 
     fig.tight_layout()
 
     return fig
 
 
+# =================================================
+# DASHBOARD CONFIGURATION
+# =================================================
+
 def dashboard_layout() -> dict:
-    """
-    Return Streamlit page configuration.
-    """
+    """Return Streamlit configuration."""
 
     return {
         "page_title": "Iris Statistical Study",
@@ -523,15 +826,17 @@ def dashboard_layout() -> dict:
     }
 
 
-# -------------------------------------------------
-# Backward-compatible functions
-# -------------------------------------------------
+# =================================================
+# BACKWARD COMPATIBILITY
+# =================================================
 
 def plot_histogram(
     data: pd.DataFrame,
     column: str,
     bins: int = 15
 ):
+    """Backward-compatible histogram."""
+
     return plot_histogram_with_distribution(
         data=data,
         column=column,
@@ -545,6 +850,8 @@ def plot_boxplot(
     numerical_column: str,
     group_column: str
 ):
+    """Backward-compatible boxplot."""
+
     return plot_boxplots_by_category(
         data=data,
         numerical_column=numerical_column,
@@ -558,9 +865,7 @@ def plot_scatter(
     y_column: str,
     group_column: str = None
 ):
-    """
-    Matplotlib scatter retained for notebook compatibility.
-    """
+    """Backward-compatible Matplotlib scatter."""
 
     _check_column(
         data,
@@ -573,6 +878,7 @@ def plot_scatter(
     )
 
     if group_column is not None:
+
         _check_column(
             data,
             group_column
@@ -603,22 +909,45 @@ def plot_scatter(
             ax=ax
         )
 
-    ax.set_title(
-        f"{x_column.replace('_', ' ').title()} "
-        f"vs {y_column.replace('_', ' ').title()}",
-        loc="left",
-        fontweight="bold"
-    )
-
     ax.set_xlabel(
-        x_column.replace("_", " ").title()
+        _pretty_label(
+            x_column
+        )
     )
 
     ax.set_ylabel(
-        y_column.replace("_", " ").title()
+        _pretty_label(
+            y_column
+        )
     )
 
-    _style_axes(ax)
+    _style_axes(
+        ax
+    )
+
+    _set_title(
+        ax,
+        (
+            f"{_pretty_label(x_column)} "
+            f"vs {_pretty_label(y_column)}"
+        )
+    )
+
+    legend = (
+        ax.get_legend()
+    )
+
+    if legend:
+
+        legend.get_frame().set_alpha(
+            0
+        )
+
+        for text_item in legend.get_texts():
+
+            text_item.set_color(
+                MUTED
+            )
 
     fig.tight_layout()
 
@@ -629,6 +958,8 @@ def plot_correlation_heatmap(
     data: pd.DataFrame,
     numerical_columns: list
 ):
+    """Backward-compatible heatmap."""
+
     return create_correlation_heatmap(
         data,
         numerical_columns
@@ -639,6 +970,8 @@ def plot_qq(
     data: pd.DataFrame,
     column: str
 ):
+    """Backward-compatible Q-Q plot."""
+
     return plot_qq_comparison(
         data,
         column

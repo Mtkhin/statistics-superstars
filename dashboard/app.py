@@ -520,7 +520,7 @@ with tab_overview:
 
         st.dataframe(
             stats_table,
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )
 
@@ -552,7 +552,7 @@ with tab_overview:
 
         st.dataframe(
             species_summary,
-            use_container_width=True
+            width="stretch"
         )
 
 
@@ -593,7 +593,7 @@ with tab_distribution:
 
         st.pyplot(
             histogram,
-            use_container_width=True
+            width="stretch"
         )
 
     with chart_right:
@@ -607,7 +607,7 @@ with tab_distribution:
 
         st.pyplot(
             qq_plot,
-            use_container_width=True
+            width="stretch"
         )
 
     distribution_result = (
@@ -679,7 +679,7 @@ with tab_distribution:
 
     st.pyplot(
         boxplot,
-        use_container_width=True
+        width="stretch"
     )
 
 
@@ -714,7 +714,7 @@ with tab_relationships:
 
     st.plotly_chart(
         scatter,
-        use_container_width=True
+        width="stretch"
     )
 
     st.divider()
@@ -728,7 +728,7 @@ with tab_relationships:
 
     st.pyplot(
         heatmap,
-        use_container_width=True
+        width="stretch"
     )
 
     with st.expander(
@@ -755,7 +755,7 @@ with tab_relationships:
 
         st.dataframe(
             correlation_table,
-            use_container_width=True
+            width="stretch"
         )
 
 
@@ -1022,7 +1022,7 @@ with tab_data:
 
     st.dataframe(
         filtered_df,
-        use_container_width=True
+        width="stretch"
     )
 
     csv_data = (
